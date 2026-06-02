@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plant Dashboard</title>
+    <script>
+        async function fetchData() {
+            const res = await fetch("/api/data");
+            const data = await res.json();
+            document.getElementById("data").innerText =
+                JSON.stringify(data, null, 2);
+        }
+
+        setInterval(fetchData, 2000);
+    </script>
+</head>
+<body onload="fetchData()">
+    <h1>Plant Watering System</h1>
+    <pre id="data">Loading...</pre>
+</body>
+</html>
