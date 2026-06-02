@@ -70,3 +70,5 @@ Testing/
 
 /.idea/
 *.env
+/watering_station/.pio/
+watering_station/include/secrets.h
