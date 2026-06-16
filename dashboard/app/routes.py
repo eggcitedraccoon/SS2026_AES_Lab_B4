@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, jsonify
-from .mqtt_client import latest_data
+from flask import Blueprint, render_template, jsonify, request
+from .mqtt_client import devices, water_plant
 
 main = Blueprint("main", __name__)
 
@@ -9,4 +9,9 @@ def index():
 
 @main.route("/api/data")
 def data():
-    return jsonify(latest_data)
+    return jsonify(list(devices.values()))
+
+@main.route("/api/water/<device_id>", methods=["POST"])
+def water(device_id):
+    water_plant(device_id)
+    return jsonify({"status": "sent"})

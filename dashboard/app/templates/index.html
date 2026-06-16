@@ -1,13 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plant Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f9; color: #333; margin: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card h2 { margin-top: 0; font-size: 1.2em; color: #2c3e50; }
+        .status { display: flex; align-items: center; margin: 10px 0; }
+        .indicator { width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }
+        .indicator.ok { background: #27ae60; }
+        .indicator.warning { background: #e74c3c; }
+        .moisture-val { font-size: 1.5em; font-weight: bold; color: #2980b9; }
+        button { 
+            background: #3498db; color: white; border: none; padding: 10px 15px; 
+            border-radius: 4px; cursor: pointer; width: 100%; font-size: 1em;
+            transition: background 0.2s;
+        }
+        button:hover { background: #2980b9; }
+        button:active { background: #1c5980; }
+    </style>
     <script>
         async function fetchData() {
-            const res = await fetch("/api/data");
-            const data = await res.json();
-            document.getElementById("data").innerText =
-                JSON.stringify(data, null, 2);
+            try {
+                const res = await fetch("/api/data");
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const devices = await res.json();
+                renderCards(devices);
+            } catch (e) {
+                console.error("Error fetching data:", e);
+                const container = document.getElementById("device-container");
+                container.innerHTML = `<p style="color: red;">Error connecting to backend: ${e.message}</p>`;
+            }
+        }
+
+        function renderCards(devices) {
+            const container = document.getElementById("device-container");
+            if (devices.length === 0) {
+                container.innerHTML = "<p>No devices connected (waiting for WS-#/response messages)...</p>";
+                return;
+            }
+
+            container.innerHTML = devices.map(d => `
+                <div class="card">
+                    <h2>${d.name}</h2>
+                    <div>Soil Moisture: <span class="moisture-val">${d.moisture ?? '--'}%</span></div>
+                    <div class="status">
+                        <div class="indicator ${d.water_low ? 'warning' : 'ok'}"></div>
+                        Water Level: ${d.water_low ? 'LOW' : 'OK'}
+                    </div>
+                    <button onclick="waterPlant('${d.id}')">Water Plant</button>
+                </div>
+            `).join('');
+        }
+
+        async function waterPlant(deviceId) {
+            try {
+                await fetch(`/api/water/${deviceId}`, { method: 'POST' });
+                alert(`Watering command sent to ${deviceId}`);
+            } catch (e) {
+                alert("Failed to send command");
+            }
         }
 
         setInterval(fetchData, 2000);
@@ -15,6 +70,8 @@
 </head>
 <body onload="fetchData()">
     <h1>Plant Watering System</h1>
-    <pre id="data">Loading...</pre>
+    <div id="device-container" class="grid">
+        <p>Loading devices...</p>
+    </div>
 </body>
 </html>
