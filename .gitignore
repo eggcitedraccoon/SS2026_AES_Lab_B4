@@ -68,7 +68,7 @@ vcpkg_installed/
 Testing/
 .cache/
 
-/.idea/
+/**/.idea/
 /**/venv/
 *.env
 /watering_station/.pio/
